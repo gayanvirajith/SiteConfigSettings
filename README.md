@@ -20,7 +20,7 @@ of this module. Idea is to save some time without doing same process over and ov
 
 3. In your admin, go to Setup > Fields. You would see some fields generated using this module.
 
-#### INFORMATION ABOUT PLUGIN MODULES
+#### Information about plugin module
 
 To find and download new modules, see the modules directory at:
 http://modules.processwire.com/ 
