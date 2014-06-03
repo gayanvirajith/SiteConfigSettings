@@ -1,0 +1,313 @@
+<?php
+/**
+ * @author  WebCreate Lanka - Gayan Virajith
+ * @contact Gayan Virajith <webcreatelk@gmail.com>
+ * @website www.webcreate.lk
+ * @create  2014-07-03
+ * ----------------------------------------------------------------------------------
+ * @licence
+ * Copyright (c) 2014 Webcreate.lk. - Gayan Virajith
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions: The above copyright notice and
+ * this permission notice shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * ----------------------------------------------------------------------------------
+ * ProcessWire Site Config Settings module
+ * Module would create some of the fields
+ * where we need to have on the site initialize stage.
+ *
+ * After been done couple of projects(websites) using ProcessWire
+ * I realized that we use same common fields to to store some data in every project.
+ * Therefore I build this module to create some fields automatically during the installation
+ * of this module. Idea is to save some time without doing same process over and over.
+ *
+ * Following fields will be created on installation.
+ *
+ *  - seo_title (SEO title) textArea field
+ *  - seo_description (SEO meta description) textArea field
+ *  - content (Content) fieldSetOpen field
+ *  - storage (Storage & Settings) fieldSetOpen field
+ */
+class SiteConfigSettings  extends WireData implements Module {
+    /**
+     * getModuleInfo is a module required by all modules to tell ProcessWire about them
+     *
+     * @return array
+     *
+     */
+    public static function getModuleInfo() {
+
+        return array(
+            // ---------------------------------
+            // The module title
+            // ---------------------------------
+            'title'     => 'Site config settings',
+            // ---------------------------------
+            // Version of the module
+            // ---------------------------------
+            'version'   => 100,
+            // ---------------------------------
+            // Summary is the brief description of what this module all about
+            // ---------------------------------
+            'summary'   => 'I have done couple of projects(websites) using ProcessWire.
+                            I realized that we use same common fields to to store some data in every project.
+                            Therefore I build this module to create some fields automatically during the installation
+                            of this module. Idea is to save some time without doing same process over and over.',
+            // ---------------------------------
+            // Author of this module
+            // ---------------------------------
+            'author'	=> 'Gayan Virajith',
+            // ---------------------------------
+            // Optional url to more information about the module
+            // ---------------------------------
+            'href'      => 'https://github.com/webcreatelk/SiteConfigSettings',
+            // ---------------------------------
+            // Singular : true is indicating that only one instance of the module is allowed
+            // ---------------------------------
+            'singular'  => true,
+            // ---------------------------------
+            // Auto load : true is indicating that the module should be started with ProcessWire
+            // ---------------------------------
+            'autoload'  => true,
+        );
+    }
+
+    /**
+     * Method to initialize the module.
+     *
+     * While the method is required, if you don't need it, then just leave the implementation blank.
+     *
+     * This is called after ProcessWire's API is fully ready for use and hooks. It is called at the end of the
+     * bootstrap process. This is before PW has started retrieving or rendering a page. If you need to have the
+     * API ready with the $page ready as well, then see the ready() method below this one.
+     *
+     */
+    public function init(){
+
+    }
+
+    /**
+     * Install module
+     */
+    public function ___install() {
+
+        // ---------------------------------
+        // Get seo title field
+        // ---------------------------------
+        $seoTitleField = wire('fields')->get('seo_title');
+
+        if (!$seoTitleField->id){
+            $seoTitleField              = new Field();
+            $seoTitleField->name        = 'seo_title';
+            $seoTitleField->type        = 'FieldtypeTextarea';
+            $seoTitleField->label       = __('SEO title');
+            $seoTitleField->description = __('Simply what you see in your browser title, when you view this page')
+                . '. ' . __('Highly recommend field for SEO');
+
+            $seoTitleField->save();
+        }
+
+        // ---------------------------------
+        // Get seo meta description
+        // ---------------------------------
+        $seoMetaDescriptionField = wire('fields')->get('seo_meta_description');
+
+        if (!$seoMetaDescriptionField->id) {
+            $seoMetaDescriptionField                = new Field();
+            $seoMetaDescriptionField->name          = 'seo_meta_description';
+            $seoMetaDescriptionField->type          = 'FieldtypeTextarea';
+            $seoMetaDescriptionField->label         = __('SEO meta description');
+            $seoMetaDescriptionField->description   = __('What you see in meta description under your HTML header.');
+
+            $seoMetaDescriptionField->save();
+        }
+
+        $homeFieldGroup =  $this->fieldgroups->get('home');
+
+        if ($homeFieldGroup->id) {
+
+            // ---------------------------------
+            // Add seo title field
+            // ---------------------------------
+            $homeFieldGroup->add($seoTitleField);
+
+            // ---------------------------------
+            // Add seo meta description
+            // ---------------------------------
+            $homeFieldGroup->add($seoMetaDescriptionField);
+
+            // ---------------------------------
+            // Save field group modifications
+            // ---------------------------------
+            $homeFieldGroup->save();
+        }
+
+
+        // ---------------------------------
+        // Creating fieldSetOpen and fieldSetClose fields
+        // ---------------------------------
+
+        // ---------------------------------
+        // Name of the fieldSet
+        // ---------------------------------
+        $contentFieldSetName = 'contents';
+
+        // ---------------------------------
+        // Get field named `contents`
+        // ---------------------------------
+        $contentFieldSetOpen =  wire('fields')->get($contentFieldSetName);
+
+        if (!$contentFieldSetOpen->id) {
+            // ---------------------------------
+            // Create new field type of fieldSetOpen
+            // ---------------------------------
+            $contentFieldSetOpen = new Field();
+            $contentFieldSetOpen->type = new FieldtypeFieldsetOpen();
+            $contentFieldSetOpen->name = $contentFieldSetName;
+            $contentFieldSetOpen->label = __('Content');
+            $contentFieldSetOpen->columnWidth = 60;
+            $contentFieldSetOpen->save();
+        }
+
+        // ---------------------------------
+        // Get field named `contents_END`
+        // ---------------------------------
+        $contentFieldSetClose = wire('fields')->get($contentFieldSetName .
+            FieldtypeFieldsetOpen::fieldsetCloseIdentifier);
+
+        if (!$contentFieldSetClose->id) {
+            $contentFieldSetClose = new Field();
+            $contentFieldSetClose->type = new FieldtypeFieldsetClose();
+            $contentFieldSetClose->name = $contentFieldSetName . FieldtypeFieldsetOpen::fieldsetCloseIdentifier;
+            $contentFieldSetClose->label = "Content close";
+            $contentFieldSetClose->save();
+        }
+
+        $homeTemplate = wire('templates')->get("home");
+
+        if ($homeTemplate->id) {
+            $homeTemplate->fieldgroup->add($contentFieldSetOpen);
+
+            // ---------------------------------
+            // Get title field and include the field in-between fieldSetOpen and Close
+            // ---------------------------------
+            $titleField = wire('fields')->get('title');
+            if ($titleField->id) $homeTemplate->fieldgroup->add($titleField);
+
+            // ---------------------------------
+            // Get headline field and include the field in-between fieldSetOpen and Close
+            // ---------------------------------
+            $headLineField = wire('fields')->get('headline');
+            if ($headLineField->id) $homeTemplate->fieldgroup->add($headLineField);
+
+            // ---------------------------------
+            // Get images field and include the field in-between fieldSetOpen and Close
+            // ---------------------------------
+            $imagesField = wire('fields')->get('images');
+            if ($imagesField->id) $homeTemplate->fieldgroup->add($imagesField);
+
+            // ---------------------------------
+            // Get body field and include the field in-between fieldSetOpen and Close
+            // ---------------------------------
+            $bodyField = wire('fields')->get('body');
+            if ($bodyField) $homeTemplate->fieldgroup->add($bodyField);
+
+            // ---------------------------------
+            // Add close fieldSet to the template
+            // ---------------------------------
+            $homeTemplate->fieldgroup->add($contentFieldSetClose);
+
+            // ---------------------------------
+            // Save home page settings
+            // ---------------------------------
+            $homeTemplate->fieldgroup->save();
+        }
+
+
+
+        // ---------------------------------
+        // Name of the fieldSet
+        // ---------------------------------
+        $storageFieldSetName = 'storage';
+
+        // ---------------------------------
+        // Get field named `contents`
+        // ---------------------------------
+        $storageFieldSetOpen =  wire('fields')->get($storageFieldSetName);
+
+        if (!$storageFieldSetOpen->id) {
+            // ---------------------------------
+            // Create new field type of fieldSetOpen
+            // ---------------------------------
+            $storageFieldSetOpen = new Field();
+            $storageFieldSetOpen->type = new FieldtypeFieldsetOpen();
+            $storageFieldSetOpen->name = $storageFieldSetName;
+            $storageFieldSetOpen->label = __('Storage & settings');
+            $storageFieldSetOpen->columnWidth = 40;
+            $storageFieldSetOpen->save();
+        }
+
+        // ---------------------------------
+        // Get field named `contents_END`
+        // ---------------------------------
+        $storageFieldSetClose = wire('fields')->get($storageFieldSetName .
+            FieldtypeFieldsetOpen::fieldsetCloseIdentifier);
+
+        if (!$storageFieldSetClose->id) {
+            $storageFieldSetClose = new Field();
+            $storageFieldSetClose->type = new FieldtypeFieldsetClose();
+            $storageFieldSetClose->name = $storageFieldSetName . FieldtypeFieldsetOpen::fieldsetCloseIdentifier;
+            $storageFieldSetClose->label = __('Storage & settings close');
+            $storageFieldSetClose->save();
+        }
+
+        $homeTemplate = wire('templates')->get("home");
+
+        if ($homeTemplate->id) {
+            $homeTemplate->fieldgroup->add($storageFieldSetOpen);
+
+            // ---------------------------------
+            // Get seo title field and include the field in-between fieldSetOpen and Close
+            // ---------------------------------
+            $seoTitleField = wire('fields')->get('seo_title');
+            if ($seoTitleField->id) $homeTemplate->fieldgroup->add($seoTitleField);
+
+            // ---------------------------------
+            // Get seo description field and include the field in-between fieldSetOpen and Close
+            // ---------------------------------
+            $seoDescriptionField = wire('fields')->get('seo_meta_description');
+            if ($seoDescriptionField->id) $homeTemplate->fieldgroup->add($seoDescriptionField);
+
+            // ---------------------------------
+            // Add close fieldSet to the template
+            // ---------------------------------
+            $homeTemplate->fieldgroup->add($storageFieldSetClose);
+
+            // ---------------------------------
+            // Save home page settings
+            // ---------------------------------
+            $homeTemplate->fieldgroup->save();
+        }
+
+    }
+
+    /**
+     * Uninstall the module
+     *
+     */
+    public function ___uninstall() {
+
+        /* todo remove installed fields if needed */
+    }
+}
